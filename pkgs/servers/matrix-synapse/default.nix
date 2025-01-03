@@ -2,6 +2,7 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  fetchpatch,
   python3,
   openssl,
   libiconv,
@@ -14,10 +15,31 @@
 }:
 
 let
-  plugins = python3.pkgs.callPackage ./plugins { };
+  python = python3.override {
+    self = python;
+    packageOverrides = final: prev: {
+      twisted = prev.twisted.overridePythonAttrs (oldAttrs: rec {
+        version = "24.7.0";
+        src = final.fetchPypi {
+          inherit (oldAttrs) pname;
+          inherit version;
+          hash = "sha256-WmAUfwRBh6En7H2pbRcNSbzOUMb9NvWU5g9Fh+/005Q=";
+        };
+        patches = [
+          (fetchpatch {
+            name = "python-3.12.6.patch";
+            url = "https://github.com/twisted/twisted/commit/3422f7988e3d42e6e5184acd65f103fd28750648.patch";
+            excludes = [ ".github/workflows/test.yaml" ];
+            hash = "sha256-/UmrHdWaApytkEDZiISjPGzpWv/Yxe/xjvr9GOjMPmQ=";
+          })
+        ];
+      });
+    };
+  };
+  plugins = python.pkgs.callPackage ./plugins { };
   tools = callPackage ./tools { };
 in
-python3.pkgs.buildPythonApplication rec {
+python.pkgs.buildPythonApplication rec {
   pname = "matrix-synapse";
   version = "1.121.1";
   format = "pyproject";
@@ -63,7 +85,7 @@ python3.pkgs.buildPythonApplication rec {
       --replace-fail "def test_recovery" "def no_test_recovery"
   '';
 
-  nativeBuildInputs = with python3.pkgs; [
+  nativeBuildInputs = with python.pkgs; [
     poetry-core
     rustPlatform.cargoSetupHook
     setuptools-rust
@@ -80,7 +102,7 @@ python3.pkgs.buildPythonApplication rec {
     ];
 
   propagatedBuildInputs =
-    with python3.pkgs;
+    with python.pkgs;
     [
       attrs
       bcrypt
@@ -115,7 +137,7 @@ python3.pkgs.buildPythonApplication rec {
     ]
     ++ twisted.optional-dependencies.tls;
 
-  optional-dependencies = with python3.pkgs; {
+  optional-dependencies = with python.pkgs; {
     postgres =
       if isPyPy then
         [
@@ -159,7 +181,7 @@ python3.pkgs.buildPythonApplication rec {
     [
       openssl
     ]
-    ++ (with python3.pkgs; [
+    ++ (with python.pkgs; [
       mock
       parameterized
     ])
@@ -180,15 +202,14 @@ python3.pkgs.buildPythonApplication rec {
       NIX_BUILD_CORES=4
     fi
 
-    PYTHONPATH=".:$PYTHONPATH" ${python3.interpreter} -m twisted.trial -j $NIX_BUILD_CORES tests
+    PYTHONPATH=".:$PYTHONPATH" ${python.interpreter} -m twisted.trial -j $NIX_BUILD_CORES tests
 
     runHook postCheck
   '';
 
   passthru = {
     tests = { inherit (nixosTests) matrix-synapse matrix-synapse-workers; };
-    inherit plugins tools;
-    python = python3;
+    inherit plugins tools python;
   };
 
   meta = with lib; {
