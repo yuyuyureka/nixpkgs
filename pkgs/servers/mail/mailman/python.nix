@@ -1,4 +1,4 @@
-{ python3, fetchPypi, lib, overlay ? (_: _: {}) }:
+{ python3, fetchFromGitHub, lib, overlay ? (_: _: {}) }:
 
 lib.fix (self: python3.override {
   inherit self;
@@ -23,7 +23,8 @@ lib.fix (self: python3.override {
       # the redis python library only supports hiredis 3+ from version 5.1.0 onwards
       hiredis = super.hiredis.overrideAttrs (new: { src, ... }: {
         version = "3.1.0";
-        src = src.override {
+        src = fetchFromGitHub {
+          inherit (src) owner repo fetchSubmodules;
           rev = "refs/tags/v${new.version}";
           hash = "sha256-ID5OJdARd2N2GYEpcYOpxenpZlhWnWr5fAClAgqEgGg=";
         };
