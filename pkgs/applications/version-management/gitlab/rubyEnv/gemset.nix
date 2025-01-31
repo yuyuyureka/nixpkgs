@@ -1233,10 +1233,10 @@ src:
     platforms = [];
     source = {
       remotes = ["https://rubygems.org"];
-      sha256 = "0yf8ckwr0pkzbdhs4y57gv9a80hvasdjv815fn67yhs4zpphqs5f";
+      sha256 = "18fbys0bf562681c96a4qcbdwxhlc9w3jz8rzkkfqns421hn024q";
       type = "gem";
     };
-    version = "0.1.1";
+    version = "0.1.0";
   };
   device_detector = {
     groups = ["default"];
