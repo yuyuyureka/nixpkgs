@@ -77,12 +77,12 @@ let
         systemArgs =
           if isCross then
             {
-              localSystem = cfg.buildPlatform;
-              crossSystem = cfg.hostPlatform;
+              localSystem = cfg.buildPlatformUnelaborated;
+              crossSystem = cfg.hostPlatformUnelaborated;
             }
           else
             {
-              localSystem = cfg.hostPlatform;
+              localSystem = cfg.hostPlatformUnelaborated;
             };
       in
       import ../../.. (
@@ -194,6 +194,22 @@ in
       '';
     };
 
+    hostPlatformUnelaborated = lib.mkOption {
+      type = lib.types.submodule {
+        options = {
+          value = lib.mkOption {
+            type = lib.types.either lib.types.str lib.types.attrs;
+          };
+        };
+        config = {
+          value = lib.mkMerge options.nixpkgs.hostPlatform.definitions;
+        };
+      };
+      default = {};
+      apply = x: x.value;
+      internal = true;
+    };
+
     hostPlatform = lib.mkOption {
       type = lib.types.either lib.types.str lib.types.attrs; # TODO utilize lib.systems.parsedPlatform
       example = {
@@ -210,6 +226,22 @@ in
 
         Ignored when `nixpkgs.pkgs` is set.
       '';
+    };
+
+    buildPlatformUnelaborated = lib.mkOption {
+      type = lib.types.submodule {
+        options = {
+          value = lib.mkOption {
+            type = lib.types.either lib.types.str lib.types.attrs;
+          };
+        };
+        config = {
+          value = lib.mkMerge options.nixpkgs.buildPlatform.definitions;
+        };
+      };
+      default = {};
+      apply = x: x.value;
+      internal = true;
     };
 
     buildPlatform = lib.mkOption {
