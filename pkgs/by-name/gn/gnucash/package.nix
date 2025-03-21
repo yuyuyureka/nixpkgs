@@ -26,6 +26,7 @@
   swig,
   webkitgtk_4_0,
   wrapGAppsHook3,
+  python3,
 }:
 
 stdenv.mkDerivation rec {
@@ -64,6 +65,7 @@ stdenv.mkDerivation rec {
       libxslt
       swig
       webkitgtk_4_0
+      python3
     ]
     ++ (with perlPackages; [
       JSONParse
@@ -92,6 +94,15 @@ stdenv.mkDerivation rec {
       url = "https://github.com/Gnucash/gnucash/commit/6531d3e46b7bee1add61aa6c6aaf8fb1f889a586.patch";
       hash = "sha256-Lque2w9X9yencNVzI/DfuE3H2dN46yVNnbBdiEQE6/4=";
     })
+    (fetchpatch {
+      name = "fix-python-bindings-build-with-swig-3-4-0.patch";
+      url = "https://github.com/Gnucash/gnucash/commit/85084e75d63633b8c7e44b99ee6cc20f421b52fc.patch";
+      hash = "sha256-3Yt/1hDpmuY8u0fYxpWWdDhDYPPTVnvQQweVRnp+9Ts=";
+    })
+  ];
+
+  cmakeFlags = [
+    "-DWITH_PYTHON=ON"
   ];
 
   # this needs to be an environment variable and not a cmake flag to suppress
