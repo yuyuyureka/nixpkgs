@@ -9675,6 +9675,8 @@ self: super: with self; {
 
   nestedtext = callPackage ../development/python-modules/nestedtext { };
 
+  nested-multipart-parser = callPackage ../development/python-modules/nested-multipart-parser { };
+
   netaddr = callPackage ../development/python-modules/netaddr { };
 
   netapp-lib = callPackage ../development/python-modules/netapp-lib { };
