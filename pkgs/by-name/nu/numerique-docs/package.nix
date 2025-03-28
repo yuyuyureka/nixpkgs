@@ -150,13 +150,7 @@ in rec {
       "test_models_documents_get_versions_slice_min_datetime"
       "test_models_documents_version_duplicate"
 
-      # Garage: https://git.deuxfleurs.fr/Deuxfleurs/garage/issues/770
-      "test_api_documents_media_auth_anonymous_public" # assert '<?xml versio...gion></Error>' == 'my prose'
-      "test_api_documents_media_auth_authenticated_public_or_authenticated" # assert '<?xml versio...gion></Error>' == 'my prose'
-      "test_api_documents_media_auth_related" # assert '<?xml versio...gion></Error>' == 'my prose
-
       # ???
-      "test_api_documents_attachment_upload_unsafe"
       "test_update_blank_title_migration"
     ];
 
