@@ -1,7 +1,7 @@
 {
   lib,
   stdenv,
-  chromium,
+  callPackage,
   nodejs,
   fetchYarnDeps,
   fetchNpmDeps,
@@ -22,6 +22,8 @@
 
 let
   gclientDeps = gclient2nix.importGclientDeps info.deps;
+
+  chromium = callPackage (./. + "/chromium_for_${lib.versions.major info.version}") {};
 in
 
 ((chromium.override { upstream-info = info.chromium; }).mkDerivation (base: {

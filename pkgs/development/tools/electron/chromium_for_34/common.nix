@@ -215,6 +215,7 @@ let
   };
 
   isElectron = packageName == "electron";
+  needsCompgen = chromiumVersionAtLeast "133";
   rustcVersion = buildPackages.rustc.version;
 
   chromiumDeps = lib.mapAttrs (
@@ -294,6 +295,8 @@ let
       [
         ninja
         gnChromium
+      ]
+      ++ lib.optionals needsCompgen [
         bashInteractive # needed for compgen in buildPhase -> process_template
       ]
       ++ [
@@ -518,7 +521,7 @@ let
           hash = "sha256-PuinMLhJ2W4KPXI5K0ujw85ENTB1wG7Hv785SZ55xnY=";
         })
       ]
-      ++ lib.optionals (lib.versionOlder rustcVersion "1.86") [
+      ++ lib.optionals (chromiumVersionAtLeast "134" && lib.versionOlder rustcVersion "1.86") [
         ./patches/chromium-134-rust-adler2.patch
       ];
 
@@ -725,10 +728,18 @@ let
         chrome_pgo_phase = 0;
         clang_base_path = "${llvmCcAndBintools}";
       }
-      // {
-        use_qt5 = false;
-        use_qt6 = false;
-      }
+      // (
+        # M134 changed use_qt to use_qt5 (and use_qt6)
+        if chromiumVersionAtLeast "134" then
+          {
+            use_qt5 = false;
+            use_qt6 = false;
+          }
+        else
+          {
+            use_qt = false;
+          }
+      )
       // {
         # To fix the build as we don't provide libffi_pic.a
         # (ld.lld: error: unable to find library -l:libffi_pic.a):
@@ -807,14 +818,12 @@ let
       let
         buildCommand = target: ''
           TERM=dumb ninja -C "${buildPath}" -j$NIX_BUILD_CORES "${target}"
-          bash -s << EOL
-          (
+          ${lib.optionalString needsCompgen "bash -s << EOL\n"}(
             source chrome/installer/linux/common/installer.include
             PACKAGE=$packageName
             MENUNAME="Chromium"
             process_template chrome/app/resources/manpage.1.in "${buildPath}/chrome.1"
-          )
-          EOL
+          )${lib.optionalString needsCompgen "\nEOL"}
         '';
         targets = extraAttrs.buildTargets or [ ];
         commands = map buildCommand targets;

@@ -45,7 +45,7 @@ let
   warnObsoleteVersionConditional =
     min-version: result:
     let
-      min-supported-version = (lib.last (lib.attrValues (lib.filterAttrs (name: _: lib.hasPrefix "electron_" name) electron-source))).unwrapped.info.chromium.version;
+      min-supported-version = "132";
     in
     lib.warnIf (lib.versionAtLeast min-supported-version min-version)
       "chromium: min-supported-version ${min-supported-version} is newer than a conditional bounded at ${min-version}. You can safely delete it."
