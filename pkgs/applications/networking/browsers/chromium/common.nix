@@ -505,7 +505,7 @@ let
           revert = true;
         })
       ]
-      ++ lib.optionals (chromiumVersionAtLeast "131" && stdenv.hostPlatform.isAarch64) [
+      ++ lib.optionals stdenv.hostPlatform.isAarch64 [
         # Reverts decommit pooled pages which causes random crashes of tabs on systems
         # with page sizes different than 4k. It 'supports' runtime page sizes, but has
         # a hardcode for aarch64 systems.
