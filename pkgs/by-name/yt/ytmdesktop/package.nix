@@ -1,18 +1,30 @@
 {
   lib,
-  asar,
+  cacert,
   commandLineArgs ? "",
   copyDesktopItems,
-  electron_33,
-  fetchurl,
+  electron,
+  fetchFromGitHub,
+  yarn-berry,
   makeDesktopItem,
   makeWrapper,
   stdenv,
-  zstd,
+  stdenvNoCC,
+  writableTmpDirAsHomeHook,
+  writeShellScriptBin,
+  zip,
 }:
+
 stdenv.mkDerivation (finalAttrs: {
   pname = "ytmdesktop";
   version = "2.0.8";
+
+  src = fetchFromGitHub {
+    owner = "ytmdesktop";
+    repo = "ytmdesktop";
+    tag = "v${finalAttrs.version}";
+    hash = "sha256-WJuT+TnpqjGgzoUVFvMHknkrba1mca5LcNMKoSkDxJQ=";
+  };
 
   desktopItems = [
     (makeDesktopItem {
@@ -31,62 +43,123 @@ stdenv.mkDerivation (finalAttrs: {
     })
   ];
 
-  nativeBuildInputs = [
-    asar
-    copyDesktopItems
-    makeWrapper
-    zstd
-  ];
+  yarnOfflineCache = stdenvNoCC.mkDerivation {
+    name = "${finalAttrs.pname}-${finalAttrs.version}-offline-cache";
+    inherit (finalAttrs) src;
 
-  src = fetchurl {
-    url = "https://github.com/ytmdesktop/ytmdesktop/releases/download/v${finalAttrs.version}/youtube-music-desktop-app_${finalAttrs.version}_amd64.deb";
-    hash = "sha256-CwidVf4i9CeD/a8u5sZrBpoYzlZqi9ptFxljr9VmKq8=";
+    nativeBuildInputs = [
+      cacert
+      yarn-berry
+      writableTmpDirAsHomeHook
+    ];
+
+    postConfigure = ''
+      yarn config set enableTelemetry false
+      yarn config set enableGlobalCache false
+      yarn config set --json supportedArchitectures.os '[ "linux", "darwin" ]'
+      yarn config set --json supportedArchitectures.cpu '["arm", "arm64", "ia32", "x64"]'
+      yarn config set cacheFolder "$out"
+    '';
+
+    buildPhase = ''
+      runHook preBuild
+
+      yarn install --mode=skip-build
+
+      runHook postBuild
+    '';
+
+    outputHashAlgo = "sha256";
+    outputHashMode = "recursive";
+
+    # TODO: figure out why the two are different
+    outputHash =
+      if stdenv.hostPlatform.isDarwin then
+        "sha256-Dc2uK0HXUgKfvHKkeIHSjjCCP6hnk52oqYn6qd/aOYM="
+      else
+        "sha256-gkMc3wVKe22/2DI49JCsVKCOHfw77lphQZX6/3wOO/o=";
   };
 
-  unpackPhase = ''
-    runHook preUnpack
+  nativeBuildInputs =
+    let
+      # the build process runs `git rev-parse --abbrev-ref HEAD`
+      fakeGit = writeShellScriptBin "git" ''
+        echo "v${finalAttrs.version}"
+      '';
+    in
+    [
+      copyDesktopItems
+      fakeGit
+      makeWrapper
+      yarn-berry
+      writableTmpDirAsHomeHook
+      zip
+    ];
 
-    ar x $src data.tar.zst
-    tar xf data.tar.zst
-
-    runHook preUnpack
-  '';
-
-  postPatch = ''
-    pushd usr/lib/youtube-music-desktop-app
-
-    asar extract resources/app.asar patched-asar
-
+  postPatch = lib.optionalString stdenv.hostPlatform.isLinux ''
     # workaround for https://github.com/electron/electron/issues/31121
-    substituteInPlace patched-asar/.vite/main/index.js \
-      --replace-fail "process.resourcesPath" "'$out/lib/resources'"
+    substituteInPlace src/main/index.ts \
+      --replace-fail "process.resourcesPath" "'$out/share/ytmdesktop/resources'"
+  '';
 
-    asar pack patched-asar resources/app.asar
+  postConfigure = ''
+    yarn config set enableTelemetry false
+    yarn config set enableGlobalCache false
+    export cachePath=$(mktemp -d)
+    cp -r $yarnOfflineCache/* $cachePath
+    yarn config set cacheFolder $cachePath
+    yarn install --mode=skip-build
+  '';
 
+  buildPhase = ''
+    runHook preBuild
+
+    cp -r ${electron.dist} electron-dist
+    chmod -R u+w electron-dist
+
+    pushd electron-dist
+    zip -0Xqr ../electron.zip .
     popd
+
+    rm -r electron-dist
+
+    # force @electron/packager to use our electron instead of downloading it
+    substituteInPlace node_modules/@electron/packager/dist/packager.js \
+        --replace-fail 'await this.getElectronZipPath(downloadOpts)' '"electron.zip"'
+
+    yarn run package
+
+    runHook postBuild
   '';
 
-  installPhase = ''
-    runHook preInstall
+  installPhase =
+    ''
+      runHook preInstall
+    ''
+    + lib.optionalString stdenv.hostPlatform.isLinux ''
 
-    mkdir -p $out/{lib,share/pixmaps}
+      mkdir -p "$out"/share/ytmdesktop
+      cp -r out/*/{locales,resources{,.pak}} "$out"/share/ytmdesktop
 
-    cp -r usr/lib/youtube-music-desktop-app/{locales,resources{,.pak}} $out/lib
-    cp usr/share/pixmaps/youtube-music-desktop-app.png $out/share/pixmaps/ytmdesktop.png
+      install -Dm644 src/assets/icons/ytmd.png "$out"/share/pixmaps/ytmdesktop.png
 
-    runHook postInstall
-  '';
+      makeWrapper ${lib.getExe electron} "$out"/bin/ytmdesktop \
+        --add-flags "$out"/share/ytmdesktop/resources/app.asar \
+        --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}" \
+        --add-flags ${lib.escapeShellArg commandLineArgs}
+    ''
+    + lib.optionalString stdenv.hostPlatform.isDarwin ''
+      mkdir -p $out/Applications
+      cp -r out/*/"YouTube Music Desktop App".app "$out"/Applications
 
-  fixupPhase = ''
-    runHook preFixup
+      wrapProgram "$out"/Applications/"YouTube Music Desktop App".app/Contents/MacOS/youtube-music-desktop-app \
+        --add-flags ${lib.escapeShellArg commandLineArgs}
 
-    makeWrapper ${lib.getExe electron_33} $out/bin/ytmdesktop \
-      --add-flags $out/lib/resources/app.asar \
-      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}" \
-      --add-flags ${lib.escapeShellArg commandLineArgs}
-
-    runHook preFixup
-  '';
+      makeWrapper "$out"/Applications/"YouTube Music Desktop App".app/Contents/MacOS/youtube-music-desktop-app "$out"/bin/ytmdesktop
+    ''
+    + ''
+      runHook postInstall
+    '';
 
   meta = {
     changelog = "https://github.com/ytmdesktop/ytmdesktop/tag/v${finalAttrs.version}";
@@ -96,12 +169,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.gpl3Only;
     mainProgram = "ytmdesktop";
     maintainers = [ lib.maintainers.cjshearer ];
-    inherit (electron_33.meta) platforms;
-    # While the files we extract from the .deb are cross-platform (javascript), the installation
-    # process for darwin is different, and I don't have a test device. PRs are welcome if you can
-    # add the correct installation steps. I would suggest looking at the following:
-    # https://www.electronjs.org/docs/latest/tutorial/application-distribution#manual-packaging
-    # https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/networking/instant-messengers/jitsi-meet-electron/default.nix
-    badPlatforms = lib.platforms.darwin;
+    inherit (electron.meta) platforms;
   };
 })
