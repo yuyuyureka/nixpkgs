@@ -1,20 +1,24 @@
 {
   lib,
-  cacert,
-  commandLineArgs ? "",
-  copyDesktopItems,
-  electron,
-  fetchFromGitHub,
-  yarn-berry,
-  makeDesktopItem,
-  makeWrapper,
   stdenv,
-  stdenvNoCC,
-  writableTmpDirAsHomeHook,
+
+  fetchFromGitHub,
+  makeDesktopItem,
   writeShellScriptBin,
+
+  copyDesktopItems,
+  makeWrapper,
+  nodejs,
+  yarn-berry_4,
   zip,
+
+  electron,
+  commandLineArgs ? "",
 }:
 
+let
+  yarn-berry = yarn-berry_4;
+in
 stdenv.mkDerivation (finalAttrs: {
   pname = "ytmdesktop";
   version = "2.0.8";
@@ -26,58 +30,12 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-WJuT+TnpqjGgzoUVFvMHknkrba1mca5LcNMKoSkDxJQ=";
   };
 
-  desktopItems = [
-    (makeDesktopItem {
-      desktopName = "YouTube Music Desktop App";
-      exec = "ytmdesktop";
-      icon = "ytmdesktop";
-      name = "ytmdesktop";
-      genericName = finalAttrs.meta.description;
-      mimeTypes = [ "x-scheme-handler/ytmd" ];
-      categories = [
-        "AudioVideo"
-        "Audio"
-      ];
-      startupNotify = true;
-      startupWMClass = "YouTube Music Desktop App";
-    })
-  ];
+  missingHashes = ./missing-hashes.json;
 
-  yarnOfflineCache = stdenvNoCC.mkDerivation {
-    name = "${finalAttrs.pname}-${finalAttrs.version}-offline-cache";
-    inherit (finalAttrs) src;
-
-    nativeBuildInputs = [
-      cacert
-      yarn-berry
-      writableTmpDirAsHomeHook
-    ];
-
-    postConfigure = ''
-      yarn config set enableTelemetry false
-      yarn config set enableGlobalCache false
-      yarn config set --json supportedArchitectures.os '[ "linux", "darwin" ]'
-      yarn config set --json supportedArchitectures.cpu '["arm", "arm64", "ia32", "x64"]'
-      yarn config set cacheFolder "$out"
-    '';
-
-    buildPhase = ''
-      runHook preBuild
-
-      yarn install --mode=skip-build
-
-      runHook postBuild
-    '';
-
-    outputHashAlgo = "sha256";
-    outputHashMode = "recursive";
-
-    # TODO: figure out why the two are different
-    outputHash =
-      if stdenv.hostPlatform.isDarwin then
-        "sha256-Dc2uK0HXUgKfvHKkeIHSjjCCP6hnk52oqYn6qd/aOYM="
-      else
-        "sha256-gkMc3wVKe22/2DI49JCsVKCOHfw77lphQZX6/3wOO/o=";
+  yarnOfflineCache = yarn-berry.fetchYarnBerryDeps {
+    inherit (finalAttrs) src missingHashes;
+    dontFixup = true; # why is this not the default?
+    hash = "sha256-F37v95Zq4e8EG0JQ6AcO/1dUKMCoJILORogoYfgvUxc=";
   };
 
   nativeBuildInputs =
@@ -91,8 +49,8 @@ stdenv.mkDerivation (finalAttrs: {
       copyDesktopItems
       fakeGit
       makeWrapper
-      yarn-berry
-      writableTmpDirAsHomeHook
+      nodejs
+      yarn-berry.yarnBerryConfigHook
       zip
     ];
 
@@ -100,15 +58,6 @@ stdenv.mkDerivation (finalAttrs: {
     # workaround for https://github.com/electron/electron/issues/31121
     substituteInPlace src/main/index.ts \
       --replace-fail "process.resourcesPath" "'$out/share/ytmdesktop/resources'"
-  '';
-
-  postConfigure = ''
-    yarn config set enableTelemetry false
-    yarn config set enableGlobalCache false
-    export cachePath=$(mktemp -d)
-    cp -r $yarnOfflineCache/* $cachePath
-    yarn config set cacheFolder $cachePath
-    yarn install --mode=skip-build
   '';
 
   buildPhase = ''
@@ -160,6 +109,23 @@ stdenv.mkDerivation (finalAttrs: {
     + ''
       runHook postInstall
     '';
+
+  desktopItems = [
+    (makeDesktopItem {
+      desktopName = "YouTube Music Desktop App";
+      exec = "ytmdesktop";
+      icon = "ytmdesktop";
+      name = "ytmdesktop";
+      genericName = finalAttrs.meta.description;
+      mimeTypes = [ "x-scheme-handler/ytmd" ];
+      categories = [
+        "AudioVideo"
+        "Audio"
+      ];
+      startupNotify = true;
+      startupWMClass = "YouTube Music Desktop App";
+    })
+  ];
 
   meta = {
     changelog = "https://github.com/ytmdesktop/ytmdesktop/tag/v${finalAttrs.version}";
