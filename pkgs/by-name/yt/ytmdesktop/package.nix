@@ -29,13 +29,15 @@ stdenv.mkDerivation (finalAttrs: {
     tag = "v${finalAttrs.version}";
     hash = "sha256-WJuT+TnpqjGgzoUVFvMHknkrba1mca5LcNMKoSkDxJQ=";
   };
+  patches = [
+    ./only-allow.patch
+  ];
 
   missingHashes = ./missing-hashes.json;
 
   yarnOfflineCache = yarn-berry.fetchYarnBerryDeps {
-    inherit (finalAttrs) src missingHashes;
-    dontFixup = true; # why is this not the default?
-    hash = "sha256-F37v95Zq4e8EG0JQ6AcO/1dUKMCoJILORogoYfgvUxc=";
+    inherit (finalAttrs) src patches missingHashes;
+    hash = "sha256-AXfAfrt9clcQrHyVrQReRfnDZl0ba9yPJ7OnuP6Y+fs=";
   };
 
   nativeBuildInputs =
@@ -50,9 +52,12 @@ stdenv.mkDerivation (finalAttrs: {
       fakeGit
       makeWrapper
       nodejs
+      yarn-berry
       yarn-berry.yarnBerryConfigHook
       zip
     ];
+
+  env.ELECTRON_SKIP_BINARY_DOWNLOAD = 1;
 
   postPatch = lib.optionalString stdenv.hostPlatform.isLinux ''
     # workaround for https://github.com/electron/electron/issues/31121

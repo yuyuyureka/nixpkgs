@@ -1,0 +1,56 @@
+diff --git a/package.json b/package.json
+index 86f446e..9c1fb13 100644
+--- a/package.json
++++ b/package.json
+@@ -48,6 +48,7 @@
+     "eslint-plugin-vue": "^9.32.0",
+     "husky": "^9.1.7",
+     "lint-staged": "^15.4.3",
++    "only-allow": "^1.2.1",
+     "prettier": "3.4.2",
+     "ts-node": "^10.9.2",
+     "typescript": "~5.7.3",
+diff --git a/yarn.lock b/yarn.lock
+index 03dc777..7faa046 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -6062,6 +6062,17 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"only-allow@npm:^1.2.1":
++  version: 1.2.1
++  resolution: "only-allow@npm:1.2.1"
++  dependencies:
++    which-pm-runs: "npm:^1.1.0"
++  bin:
++    only-allow: bin.js
++  checksum: 10c0/0b68d0cf9af652743098eaa460cfe95711ec2dbdb04f487da8904d308321aa192f20896563fd1087ef36f5de0e3671459945a30223849f87c269bb3592273bd1
++  languageName: node
++  linkType: hard
++
+ "optionator@npm:^0.9.3":
+   version: 0.9.3
+   resolution: "optionator@npm:0.9.3"
+@@ -8090,6 +8101,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"which-pm-runs@npm:^1.1.0":
++  version: 1.1.0
++  resolution: "which-pm-runs@npm:1.1.0"
++  checksum: 10c0/b8f2f230aa49babe21cb93f169f5da13937f940b8cc7a47d2078d9d200950c0dba5ac5659bc01bdbe401e6db3adec6a97b6115215a4ca8e87fd714aebd0cabc6
++  languageName: node
++  linkType: hard
++
+ "which-typed-array@npm:^1.1.14, which-typed-array@npm:^1.1.15":
+   version: 1.1.15
+   resolution: "which-typed-array@npm:1.1.15"
+@@ -8394,6 +8412,7 @@ __metadata:
+     husky: "npm:^9.1.7"
+     lint-staged: "npm:^15.4.3"
+     material-symbols: "npm:^0.12.0"
++    only-allow: "npm:^1.2.1"
+     prettier: "npm:3.4.2"
+     socket.io: "npm:^4.8.1"
+     ts-node: "npm:^10.9.2"
