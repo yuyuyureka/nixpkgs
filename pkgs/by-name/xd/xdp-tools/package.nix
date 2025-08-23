@@ -13,6 +13,7 @@
   emacs-nox,
   wireshark-cli,
   nukeReferences,
+  linuxHeaders,
 }:
 stdenv.mkDerivation rec {
   pname = "xdp-tools";
@@ -35,6 +36,7 @@ stdenv.mkDerivation rec {
     elfutils
     libpcap
     zlib
+    linuxHeaders
   ];
 
   depsBuildBuild = [
