@@ -18,6 +18,8 @@ stdenv.mkDerivation rec {
   };
 
   preConfigure = ''
+    substituteInPlace src/encoder.h --replace-fail 'typedef int bool;' ""
+
     # Configure script is not in the root of the source directory
     cd build/generic
   ''
