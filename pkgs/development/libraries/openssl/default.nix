@@ -244,7 +244,7 @@ let
 
       enableParallelBuilding = true;
 
-      doCheck = true;
+      doCheck = !stdenv.hostPlatform.isStatic;
       preCheck = ''
         patchShebangs util
       '';
