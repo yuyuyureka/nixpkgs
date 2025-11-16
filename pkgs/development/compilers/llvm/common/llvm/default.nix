@@ -229,7 +229,7 @@ stdenv.mkDerivation (
           (
             fetchpatch {
               url = "https://github.com/llvm/llvm-project/commit/a314b3b401b5f9e6218d863bfcc29393e1b6f447.patch";
-              hash = "sha256-NDtq+YKhja02Vlb+gXnVLvEzo8c2GK/ShOzv1t4m2pA=";
+              hash = "sha256-gYvtkY+f/HNk6KjOmqSBrMEu5ewRrxJK1s93/LEMTtI=";
               stripLen = 1;
             }
           );
