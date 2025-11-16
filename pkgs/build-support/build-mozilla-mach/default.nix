@@ -206,7 +206,7 @@ let
       # aarch64-darwin firefox crashes on loading favicons due to a llvm 21 bug:
       # https://github.com/NixOS/nixpkgs/issues/453372
       # https://bugzilla.mozilla.org/show_bug.cgi?id=1995582#c16
-      lib.optionalAttrs (stdenv.hostPlatform.isDarwin && stdenv.hostPlatform.isAarch64) {
+      lib.optionalAttrs stdenv.hostPlatform.isAarch64 {
         llvmPackages = pkgs.llvmPackages_20;
       }
     )).packages.stable;
