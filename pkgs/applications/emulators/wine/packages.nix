@@ -106,12 +106,14 @@ with src;
     mingwGccs = with pkgsCross; [
       mingw32.buildPackages.gcc
       mingwW64.buildPackages.gcc
+      mingwW64ec.buildPackages.clang
     ];
     geckos = [ gecko64 ];
     monos = [ mono ];
-    configureFlags = [ "--enable-archs=x86_64,i386" ];
+    configureFlags = [ "--enable-archs=arm64ec,x86_64,i386" ];
     platforms = [
       "x86_64-linux"
+      "aarch64-linux"
       "x86_64-darwin"
     ];
     mainProgram = "wine";

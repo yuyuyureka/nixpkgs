@@ -212,6 +212,13 @@ rec {
         version = "8";
         arch = "armv8-a";
       };
+      arm64ec = {
+        bits = 64;
+        significantByte = littleEndian;
+        family = "arm";
+        version = "8";
+        arch = "armv8-a";
+      };
 
       i386 = {
         bits = 32;

@@ -354,6 +354,13 @@ rec {
     libc = "msvcrt"; # This distinguishes the mingw (non posix) toolchain
   };
 
+  mingwW64ec = {
+    # That's the triplet they use in the mingw-w64 docs.
+    config = "arm64ec-w64-mingw32";
+    libc = "msvcrt"; # This distinguishes the mingw (non posix) toolchain
+    useLLVM = true;
+  };
+
   ucrt64 = {
     config = "x86_64-w64-mingw32";
     libc = "ucrt"; # This distinguishes the mingw (non posix) toolchain

@@ -241,6 +241,10 @@ stdenv.mkDerivation (finalAttrs: {
     lib.optionalString (stdenv.hostPlatform.isDarwin) ''
       ln -s "$out/lib"/*/* "$out/lib"
     ''
+    + lib.optionalString (stdenv.hostPlatform.system == "arm64ec-windows") ''
+      mkdir -p $out/lib/arm64ec-w64-windows-gnu
+      ln -s $out/lib/windows/libclang_rt.builtins-arm64ec.a $out/lib/arm64ec-w64-windows-gnu/libclang_rt.builtins.a
+    ''
     + lib.optionalString (useLLVM && stdenv.hostPlatform.isLinux) ''
       ln -s $out/lib/*/clang_rt.crtbegin-*.o $out/lib/crtbegin.o
       ln -s $out/lib/*/clang_rt.crtend-*.o $out/lib/crtend.o

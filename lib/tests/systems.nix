@@ -202,6 +202,7 @@ lib.runTests (
     ];
     testwindows = mseteq windows [
       "aarch64-windows"
+      "arm64ec-windows"
       "i686-windows"
       "x86_64-windows"
     ];
