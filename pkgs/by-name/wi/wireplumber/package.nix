@@ -23,7 +23,7 @@
   enableGI ? true,
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "wireplumber";
   version = "0.5.13";
 
@@ -37,9 +37,12 @@ stdenv.mkDerivation rec {
     domain = "gitlab.freedesktop.org";
     owner = "pipewire";
     repo = "wireplumber";
-    rev = version;
+    tag = finalAttrs.version;
     hash = "sha256-iQpMT01mRroaA48spA11zdb47L5AcVmigE4nJuJRaUo=";
   };
+
+  strictDeps = true;
+  __structuredAttrs = true;
 
   nativeBuildInputs = [
     meson
@@ -90,6 +93,9 @@ stdenv.mkDerivation rec {
     homepage = "https://pipewire.org";
     license = lib.licenses.mit;
     platforms = lib.platforms.linux;
-    maintainers = with lib.maintainers; [ k900 ];
+    maintainers = with lib.maintainers; [
+      k900
+      qweered
+    ];
   };
-}
+})
