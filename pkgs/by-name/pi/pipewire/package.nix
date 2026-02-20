@@ -289,6 +289,7 @@ stdenv.mkDerivation (finalAttrs: {
     platforms = lib.platforms.linux ++ lib.platforms.freebsd;
     maintainers = with lib.maintainers; [
       k900
+      qweered
     ];
     pkgConfigModules = [
       "libpipewire-0.3"
