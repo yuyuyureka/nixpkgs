@@ -5262,14 +5262,6 @@ with pkgs;
 
   pipx = with python3.pkgs; toPythonApplication pipx;
 
-  pipewire = callPackage ../development/libraries/pipewire {
-    # ffmpeg depends on SDL2 which depends on pipewire by default.
-    # Break the cycle by depending on ffmpeg-headless.
-    # Pipewire only uses libavcodec (via an SPA plugin), which isn't
-    # affected by the *-headless changes.
-    ffmpeg = ffmpeg-headless;
-  };
-
   wireplumber = callPackage ../development/libraries/pipewire/wireplumber.nix { };
 
   racket-minimal = callPackage ../by-name/ra/racket/minimal.nix {
