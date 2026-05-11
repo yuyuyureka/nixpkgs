@@ -11,6 +11,7 @@
   npmHooks,
   yarn-berry_4,
   unzip,
+  writers,
 
   libnotify,
   libpulseaudio,
@@ -71,7 +72,9 @@ in
   yarnOfflineCache = yarn-berry.fetchYarnBerryDeps {
     src = gclientDeps."src/electron".path;
     patches = [ yarnPatch ];
-    hash = info.electron_yarn_hash;
+    hash = info.electron_yarn_data.hash;
+  } // lib.optionalString (info.electron_yarn_data ? "missing_hashes") {
+    missingHashes = writers.writeJSON "missing-hashes.json" info.electron_yarn_data.missing_hashes;
   };
 
   dontYarnBerryInstallDeps = true; # we'll run the hook manually
