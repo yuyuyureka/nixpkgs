@@ -69,11 +69,12 @@ in
 
   npmRoot = "third_party/node";
 
+  missingHashes = lib.optionalString (info.electron_yarn_data ? "missing_hashes") writers.writeJSON "missing-hashes.json" info.electron_yarn_data.missing_hashes;
   yarnOfflineCache = yarn-berry.fetchYarnBerryDeps {
     src = gclientDeps."src/electron".path;
     patches = [ yarnPatch ];
     hash = info.electron_yarn_data.hash;
-  } // lib.optionalString (info.electron_yarn_data ? "missing_hashes") {
+  } // lib.optionalAttrs (info.electron_yarn_data ? "missing_hashes") {
     missingHashes = writers.writeJSON "missing-hashes.json" info.electron_yarn_data.missing_hashes;
   };
 

@@ -118,8 +118,11 @@ def get_chromium_gn_source(chromium_tag: str) -> dict:
 def get_electron_yarn_data(electron_tag: str) -> dict:
     print(f"yarn-berry-fetcher prefetch", file=sys.stderr)
     with tempfile.TemporaryDirectory() as tmp_dir:
+        print(f"Patching yarn.lock for yarn 4.14 support", file=sys.stderr)
+        yarn_lock_file=get_electron_file(electron_tag, "yarn.lock")
+        patched_yarn_lock_file=yarn_lock_file.replace('version: 8', 'version: 9')
         with open(tmp_dir + "/yarn.lock", "w") as f:
-            f.write(get_electron_file(electron_tag, "yarn.lock"))
+            f.write(patched_yarn_lock_file)
         missing_hashes_str = (
             subprocess.check_output(
                 ["yarn-berry-fetcher", "missing-hashes", tmp_dir + "/yarn.lock"]
