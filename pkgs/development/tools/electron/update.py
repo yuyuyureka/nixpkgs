@@ -128,7 +128,6 @@ def get_electron_yarn_data(electron_tag: str) -> dict:
                 ["yarn-berry-fetcher", "missing-hashes", tmp_dir + "/yarn.lock"]
             )
             .decode("utf-8")
-            .strip()
         )
         missing_hashes = json.loads(missing_hashes_str)
         cmd = ["yarn-berry-fetcher", "prefetch", tmp_dir + "/yarn.lock"]
