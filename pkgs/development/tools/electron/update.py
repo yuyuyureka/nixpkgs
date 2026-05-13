@@ -120,7 +120,7 @@ def get_electron_yarn_data(electron_tag: str) -> dict:
     with tempfile.TemporaryDirectory() as tmp_dir:
         print(f"Patching yarn.lock for yarn 4.14 support", file=sys.stderr)
         yarn_lock_file=get_electron_file(electron_tag, "yarn.lock")
-        patched_yarn_lock_file=yarn_lock_file.replace('version: 8', 'version: 9')
+        patched_yarn_lock_file=yarn_lock_file.replace('version: 8', 'version: 9', 1)
         with open(tmp_dir + "/yarn.lock", "w") as f:
             f.write(patched_yarn_lock_file)
         missing_hashes_str = (
