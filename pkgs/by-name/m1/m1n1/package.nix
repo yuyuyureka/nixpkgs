@@ -32,17 +32,23 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "m1n1";
-  version = "1.5.2";
+  version = "1.6.0+m3";
 
   src = fetchFromGitHub {
-    owner = "AsahiLinux";
+    owner = "yuyuyureka";
     repo = "m1n1";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-rxop5r+EVXnp1OVkGT6MUwcl6yNTJxJSJuruZiaou7g=";
+    rev = "acf9ea15f9d2006d3bf1ddde0bbc897a70db7677";
+    hash = "sha256-isJbdkWTPLVX3y/z8/FceVBg72Dlttwwj4S1sSG2/+g=";
     fetchSubmodules = true;
   };
 
-  cargoVendorDir = ".";
+  cargoDeps = rustPlatform.fetchCargoVendor {
+    inherit (finalAttrs) pname version;
+    src = "${finalAttrs.src}/rust";
+    sourceRoot = "rust";
+    hash = "sha256-vlaY+U55Er6iardbQXXiJcU7+vSMKGoq1a1/U90oTFQ=";
+  };
+  cargoRoot = "rust";
 
   postPatch = lib.optionalString (customLogo != null) ''
     magick ${customLogo} -resize 128x128 data/custom_128.png
@@ -55,14 +61,6 @@ stdenv.mkDerivation (finalAttrs: {
     rustPackages.cargo
     rustPlatform.cargoSetupHook
   ];
-
-  postConfigure = ''
-    patchShebangs --build font/makefont.sh
-    FONT_PATH=${source-code-pro}/share/fonts/opentype/SourceCodePro-Bold.otf
-    rm font/{SourceCodePro-Bold.ttf,font.bin,font_retina.bin}
-    ./font/makefont.sh 8 16 12 $FONT_PATH font/font.bin
-    ./font/makefont.sh 16 32 25 $FONT_PATH font/font_retina.bin
-  '';
 
   makeFlags = [
     "ARCH=${stdenv.cc.targetPrefix}"
